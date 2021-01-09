@@ -1,0 +1,178 @@
+Dim ws As Worksheet
+
+    'Start the loop
+    
+    'For Each ws In the Worksheet
+
+       
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Cells(1, 10).Value = "Yearly Change"
+        ws.Cells(1, 11).Value = "Percent Change"
+        ws.Cells(1, 12).Value = "Total Stock Volume"
+
+ 'Set the hold ticker symbol by variable
+        Dim ticker_symbol As String
+ 
+ 'Set the total volume of traded stock variable
+        Dim total_vol As Double
+        total_vol = 0
+ 
+ 'Mantain tracker location for all ticker symbol in the summary table
+        Dim rowcount As Long
+        rowcount = 2
+ 
+ 'Set the variable to hold year open price
+        Dim year_open As Double
+        year_open = 0
+
+'Set the variable to hold year close price
+        Dim year_close As Double
+        year_close = 0
+          
+'Set the variable to hold the change in price by year
+        Dim year_change As Double
+        year_change = 0
+
+ 'Set the variable to hold the percent change in price by year
+        Dim percent_change As Double
+        percent_change = 0
+  'Set the variable for total rows to loop
+        Dim lastrow As Long
+        lastrow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+ 'Loop search by ticker symbols
+        For i = 2 To lastrow
+'Conditional to grab year open price
+            If ws.Cells(i, 1).Value <> ws.Cells(i - 1, 1).Value Then
+
+                year_open = ws.Cells(i, 3).Value
+
+            End If
+
+            'Total volume for each row that determines the total stock volume by year
+            total_vol = total_vol + ws.Cells(i, 7)
+
+            'Conditional to determine ticker symbol is going changing
+            If ws.Cells(i, 1).Value <> ws.Cells(i + 1, 1).Value Then
+
+             'Move the ticker symbol to the summary table
+                ws.Cells(rowcount, 9).Value = ws.Cells(i, 1).Value
+
+             'Move the total stock volume to the summary table
+                ws.Cells(rowcount, 12).Value = total_vol
+
+             'Grab year end price
+                year_close = ws.Cells(i, 6).Value
+
+            'Calculate the price change for the year and move it to the summary table.
+                year_change = year_close - year_open
+                ws.Cells(rowcount, 10).Value = year_change
+
+             'Conditional to format to highlight positive or negative change.
+                If year_change >= 0 Then
+                    ws.Cells(rowcount, 10).Interior.ColorIndex = 4
+                Else
+                    ws.Cells(rowcount, 10).Interior.ColorIndex = 3
+                End If
+
+             'Calculate the yearly percent change and transfer it to the summary table as a formatted percentage
+            'Conditional for calculation
+                If year_open = 0 And year_close = 0 Then
+             'Cannot use a formula because you cant divide by zero.
+                    percent_change = 0
+                    ws.Cells(rowcount, 11).Value = percent_change
+                    ws.Cells(rowcount, 11).NumberFormat = "0.00%"
+                ElseIf year_open = 0 Then
+                'If a stock starts with zero and it increases it will grow by a uncertain percent.
+                'By effect, we need to  verify the actual increase in price on stated dollar amount and therefore put '"New Stock" as percent change.
+                    Dim percent_change_NA As String
+                    percent_change_NA = "New Stock"
+                    ws.Cells(rowcount, 11).Value = percent_change
+                Else
+                    percent_change = year_change / year_open
+                    ws.Cells(rowcount, 11).Value = percent_change
+                    ws.Cells(rowcount, 11).NumberFormat = "0.00%"
+                End If
+
+            'Add 1 to rowcount to move it to the next empty row in the summary table
+                rowcount = rowcount + 1
+
+            'Reset to 0 the total stock volume of year open, close change and price percent change
+                total_vol = 0
+                year_open = 0
+                year_close = 0
+                year_change = 0
+                percent_change = 0
+                
+            End If
+        Next i
+
+        'Create a performance table ranging from highest to lowest
+        'Titles
+        ws.Cells(2, 15).Value = "Greatest % Increase"
+        ws.Cells(3, 15).Value = "Greatest % Decrease"
+        ws.Cells(4, 15).Value = "Greatest Total Volume"
+        ws.Cells(1, 16).Value = "Ticker"
+        ws.Cells(1, 17).Value = "Value"
+
+        'Assign lastrow to summary table to count number of the rows
+        lastrow = ws.Cells(Rows.Count, 9).End(xlUp).Row
+
+        'Set variables with the stock with most volume to hold best performer and worst performer
+        Dim best_stock As String
+        Dim best_value As Double
+
+        'Set the top performing stock to equal the first stock
+        best_value = ws.Cells(2, 11).Value
+
+        Dim worst_stock As String
+        Dim worst_value As Double
+
+        'Set the worst performing stock to equal the first stock
+        worst_value = ws.Cells(2, 11).Value
+
+        Dim most_vol_stock As String
+        Dim most_vol_value As Double
+
+        'Set the most volume that equals the first stock
+        most_vol_value = ws.Cells(2, 12).Value
+
+        'Loop a search to summary table
+        For j = 2 To lastrow
+
+            'Conditional determinating the best performer
+            If ws.Cells(j, 11).Value > best_value Then
+                best_value = ws.Cells(j, 11).Value
+                best_stock = ws.Cells(j, 9).Value
+            End If
+
+            'Conditional determinating the worst performer
+            If ws.Cells(j, 11).Value < worst_value Then
+                worst_value = ws.Cells(j, 11).Value
+                worst_stock = ws.Cells(j, 9).Value
+            End If
+
+            'Conditional stock with most volume traded
+            If ws.Cells(j, 12).Value > most_vol_value Then
+                most_vol_value = ws.Cells(j, 12).Value
+                most_vol_stock = ws.Cells(j, 9).Value
+            End If
+
+        Next j
+
+        'Move the best and worst performing stock and the stock with greatest volume to the performance table
+        ws.Cells(2, 16).Value = best_stock
+        ws.Cells(2, 17).Value = best_value
+        ws.Cells(2, 17).NumberFormat = "0.00%"
+        ws.Cells(3, 16).Value = worst_stock
+        ws.Cells(3, 17).Value = worst_value
+        ws.Cells(3, 17).NumberFormat = "0.00%"
+        ws.Cells(4, 16).Value = most_vol_stock
+        ws.Cells(4, 17).Value = most_vol_value
+
+       
+        ws.Columns("I:L").EntireColumn.AutoFit
+        ws.Columns("O:Q").EntireColumn.AutoFit
+
+    Next ws
+
+End Sub
